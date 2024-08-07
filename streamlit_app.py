@@ -46,7 +46,7 @@ def get_nursary_info(match_string):
                 availability[column] = row[column]
 
             nursary_info = {
-                "nursary_name": row[df.columns[0]],
+                "施設名": row[df.columns[0]],
                 **availability
             }
             nursary_info_list.append(nursary_info)
