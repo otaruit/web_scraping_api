@@ -3,7 +3,8 @@ import streamlit as st
 import requests
 import json
 import shutil
-import os  # ここでosモジュールをインポート
+import os
+from datetime import datetime
 
 url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
 
@@ -61,7 +62,9 @@ certified_childcare = get_nursary_info('ぞうさんハウス')
 age_options = ['０歳', '１歳', '２歳', '３歳', '４歳', '５歳']
 availability_options = ['〇', '△', '☓']
 
-st.title('江別市保育園今月の入所状況')
+# 現在の月を取得してタイトルに反映
+current_month = str(int(datetime.now().strftime('%m')))  # 先頭の0を除いた月を取得
+st.title(f'江別市保育園{current_month}月の入所状況')
 
 st.write("〇：空きあり　△：若干空きあり　☓：空きなし")
 
@@ -107,7 +110,7 @@ with col1:
         for df in [df_childcare, df_community_childcare, df_certified_childcare]:
             if df is not None:
                 for index, row in df.iterrows():
-                    row_message = f"{row['nursary_name']}: " + ', '.join([f"{col}: {row[col]}" for col in df.columns if col != 'nursary_name'])
+                    row_message = f"{row['施設名']}: " + ', '.join([f"{col}: {row[col]}" for col in df.columns if col != '施設名'])
                     message += row_message + '\n'
         
         response = send_line_notify(message)
