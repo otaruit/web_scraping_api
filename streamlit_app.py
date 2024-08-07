@@ -6,12 +6,20 @@ import json
 url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
 
 def load_env_vars():
+    if not os.path.exists('env.json'):
+        if os.path.exists('env.json.sample.json'):
+            shutil.copy('env.json.sample.json', 'env.json')
+            st.warning('env.json.sample.jsonからenv.jsonを作成しました。適切な値に更新してください。')
+        else:
+            st.error('env.json ファイルが見つかりません')
+            return ''
+    
     try:
         with open('env.json', 'r') as f:
             env = json.load(f)
             return env.get('LINE_NOTIFY_TOKEN', '')
-    except FileNotFoundError:
-        st.error('env.json ファイルが見つかりません')
+    except json.JSONDecodeError:
+        st.error('env.json の形式が不正です')
         return ''
 
 LINE_NOTIFY_TOKEN = load_env_vars()
