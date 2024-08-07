@@ -6,7 +6,7 @@ import requests
 url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
 
 # LINE Notifyのアクセストークン
-LINE_NOTIFY_TOKEN = 'YOUR_LINE_NOTIFY_TOKEN'  # ここにアクセストークンを入力
+LINE_NOTIFY_TOKEN = 'GCYFKNi6uD8fS0pfX4bdPFIeGzd6sXFW0xz8wS7lAdk'  # ここにアクセストークンを入力
 
 # マッチするテーブルを取得する関数
 def get_nursary_info(match_string):
