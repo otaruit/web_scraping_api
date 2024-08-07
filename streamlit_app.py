@@ -6,7 +6,7 @@ import requests
 url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
 
 # LINE Notifyのアクセストークン
-LINE_NOTIFY_TOKEN = 'YOUR_LINE_NOTIFY_TOKEN'  # ここにアクセストークンを入力
+LINE_NOTIFY_TOKEN = ''  # ここにアクセストークンを入力
 
 # マッチするテーブルを取得する関数
 def get_nursary_info(match_string):
@@ -79,8 +79,8 @@ df_community_childcare = display_filtered_table(community_childcare, selected_ag
 st.header('Certified Childcare')
 df_certified_childcare = display_filtered_table(certified_childcare, selected_age, selected_availability)
 
-# 「LINEで通知」ボタンと「保存」ボタンをドロップダウンリストの直下に配置
-col1, col2 = st.columns([1, 1])  # 2つのカラムに分ける
+# ドロップダウンリストの直下に「LINEで通知」ボタンと「保存」ボタンを配置
+col1, col2 = st.columns([2, 1])
 
 with col1:
     if st.button('LINEで通知'):
