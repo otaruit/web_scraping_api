@@ -1,0 +1,5 @@
+pandas
+streamlit
+requests
+lxml
+line-bot-sdk
