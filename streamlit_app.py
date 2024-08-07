@@ -2,6 +2,8 @@ import pandas as pd
 import streamlit as st
 import requests
 import json
+import shutil
+import os  # ここでosモジュールをインポート
 
 url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
 
@@ -42,6 +44,7 @@ def get_nursary_info(match_string):
             availability = {}
             for column in df.columns[1:]:
                 availability[column] = row[column]
+
             nursary_info = {
                 "nursary_name": row[df.columns[0]],
                 **availability
@@ -59,6 +62,7 @@ age_options = ['０歳', '１歳', '２歳', '３歳', '４歳', '５歳']
 availability_options = ['〇', '△', '☓']
 
 st.title('江別市保育園今月の入所状況')
+
 st.write("〇：空きあり　△：若干空きあり　☓：空きなし")
 
 if 'selected_age' not in st.session_state:
@@ -98,7 +102,7 @@ df_certified_childcare = display_filtered_table(certified_childcare, selected_ag
 with col1:
     if st.button('LINEで通知'):
         message = f'年齢: {st.session_state.selected_age}, 対応状況: {st.session_state.selected_availability}\n'
-        message += 'データ:\n'
+        message += 'フィルタリングされたデータ:\n'
         
         for df in [df_childcare, df_community_childcare, df_certified_childcare]:
             if df is not None:
@@ -114,7 +118,7 @@ with col1:
             st.error('LINEへの通知に失敗しました。')
 
 with col2:
-    if st.button('選択肢を保存'):
+    if st.button('保存'):
         with open('selected_options.txt', 'w') as file:
             file.write(f"選択された年齢: {st.session_state.selected_age}\n")
             file.write(f"選択された対応状況: {st.session_state.selected_availability}\n")
