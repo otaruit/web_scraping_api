@@ -32,8 +32,6 @@
 # else:
 #     print("指定したテーブルが見つかりませんでした。")
 
-
-
 import pandas as pd
 
 # WikipediaのURL
@@ -44,18 +42,19 @@ def get_nursary_info(match_string):
     df_list = pd.read_html(url, match=match_string)
     if df_list:
         df = df_list[0]
+        # 列名を確認
+        print(f"テーブル '{match_string}' の列名:", df.columns)
         nursary_info_list = []
         for index, row in df.iterrows():
+            # availabilityの辞書を動的に作成
+            availability = {}
+            for column in df.columns[1:]:  # 最初の列は名前の列なのでスキップ
+                availability[column] = row[column]
+
+            # 辞書型に変換
             nursary_info = {
-                "nursary_name": row["Unnamed: 0"],
-                "availability": {
-                    "０歳": row["０歳"],
-                    "１歳": row["１歳"],
-                    "２歳": row["２歳"],
-                    "３歳": row["３歳"],
-                    "４歳": row["４歳"],
-                    "５歳": row["５歳"]
-                }
+                "nursary_name": row[df.columns[0]],
+                "availability": availability
             }
             nursary_info_list.append(nursary_info)
         return nursary_info_list
