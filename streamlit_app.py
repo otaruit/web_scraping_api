@@ -118,7 +118,7 @@ with col1:
             st.error('LINEへの通知に失敗しました。')
 
 with col2:
-    if st.button('保存'):
+    if st.button('選択内容を保存'):
         with open('selected_options.txt', 'w') as file:
             file.write(f"選択された年齢: {st.session_state.selected_age}\n")
             file.write(f"選択された対応状況: {st.session_state.selected_availability}\n")
