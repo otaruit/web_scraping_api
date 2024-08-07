@@ -6,6 +6,9 @@ import shutil
 import os
 from datetime import datetime
 
+
+st.set_page_config(page_title="江別市ほいくえんアプリ")
+
 url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
 
 def load_env_vars():
@@ -62,8 +65,8 @@ certified_childcare = get_nursary_info('ぞうさんハウス')
 age_options = ['０歳', '１歳', '２歳', '３歳', '４歳', '５歳']
 availability_options = ['〇', '△', '☓']
 
-# 現在の月を取得してタイトルに反映
-current_month = str(int(datetime.now().strftime('%m')))  # 先頭の0を除いた月を取得
+
+current_month = str(int(datetime.now().strftime('%m'))) 
 st.title(f'江別市保育園{current_month}月の入所状況')
 
 st.write("〇：空きあり　△：若干空きあり　☓：空きなし")
