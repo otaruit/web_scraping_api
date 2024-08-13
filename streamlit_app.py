@@ -10,6 +10,14 @@ from datetime import datetime
 st.set_page_config(page_title="江別市ほいくえんアプリ")
 st.write("https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html からWEBスクレイピング")
 
+with col2:
+    if st.button('選択内容を保存'):
+        with open('selected_options.txt', 'w') as file:
+            file.write(f"選択された年齢: {st.session_state.selected_age}\n")
+            file.write(f"選択された対応状況: {st.session_state.selected_availability}\n")
+        st.success('選択肢が保存されました。')
+
+
 url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
 
 def load_env_vars():
@@ -105,9 +113,3 @@ df_community_childcare = display_filtered_table(community_childcare, selected_ag
 st.header('地域型保育')
 df_certified_childcare = display_filtered_table(certified_childcare, selected_age, selected_availability)
 
-with col2:
-    if st.button('選択内容を保存'):
-        with open('selected_options.txt', 'w') as file:
-            file.write(f"選択された年齢: {st.session_state.selected_age}\n")
-            file.write(f"選択された対応状況: {st.session_state.selected_availability}\n")
-        st.success('選択肢が保存されました。')
