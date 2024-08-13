@@ -8,6 +8,7 @@ from datetime import datetime
 
 
 st.set_page_config(page_title="江別市ほいくえんアプリ")
+st.write("https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html からWEBスクレイピング")
 
 url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
 
@@ -15,7 +16,6 @@ def load_env_vars():
     if not os.path.exists('env.json'):
         if os.path.exists('env.json.sample.json'):
             shutil.copy('env.json.sample.json', 'env.json')
-            st.warning('env.json.sample.jsonからenv.jsonを作成しました。適切な値に更新してください。')
         else:
             st.error('env.json ファイルが見つかりません')
             return ''
@@ -104,24 +104,6 @@ df_community_childcare = display_filtered_table(community_childcare, selected_ag
 
 st.header('地域型保育')
 df_certified_childcare = display_filtered_table(certified_childcare, selected_age, selected_availability)
-
-with col1:
-    if st.button('LINEで通知'):
-        message = f'年齢: {st.session_state.selected_age}, 対応状況: {st.session_state.selected_availability}\n'
-        message += 'フィルタリングされたデータ:\n'
-        
-        for df in [df_childcare, df_community_childcare, df_certified_childcare]:
-            if df is not None:
-                for index, row in df.iterrows():
-                    row_message = f"{row['施設名']}: " + ', '.join([f"{col}: {row[col]}" for col in df.columns if col != '施設名'])
-                    message += row_message + '\n'
-        
-        response = send_line_notify(message)
-        
-        if response.status_code == 200:
-            st.success('LINEに通知が送信されました。')
-        else:
-            st.error('LINEへの通知に失敗しました。')
 
 with col2:
     if st.button('選択内容を保存'):
