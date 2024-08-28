@@ -1,13 +1,14 @@
+import json
 import requests
 from bs4 import BeautifulSoup
-import streamlit as st
 import urllib3
+from flask import Flask, jsonify
+
+# Flaskアプリケーションの作成
+app = Flask(__name__)
 
 # 警告を無視する設定
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-st.set_page_config(page_title="イベント情報")
-st.write("https://otaru.gr.jp/summer からWEBスクレイピング")
 
 url = 'https://otaru.gr.jp/summer'
 
@@ -61,27 +62,24 @@ def get_event_details():
     
     return details_list
 
-# h3タグと画像、イベント詳細情報を取得
-class_name_h3 = 'head_item event_title'
-class_name_img = 'attachment-3x2 size-3x2 wp-post-image'
+@app.route('/api/events', methods=['GET'])
+def get_events():
+    class_name_h3 = 'head_item event_title'
+    class_name_img = 'attachment-3x2 size-3x2 wp-post-image'
 
-h3_with_images = get_h3_with_images(class_name_h3, class_name_img)
-event_details = get_event_details()
+    h3_with_images = get_h3_with_images(class_name_h3, class_name_img)
+    event_details = get_event_details()
 
-# 結果をStreamlitで表示
-if h3_with_images and event_details:
-    for i in range(min(len(h3_with_images), len(event_details))):
-        st.write("タイトル:", h3_with_images[i]['title'])
-        if h3_with_images[i]['img_src']:
-            st.image(h3_with_images[i]['img_src'])  # 画像を表示
-        else:
-            st.write("画像が見つかりませんでした。")
-        
-        # イベントの詳細情報を表示
-        details = event_details[i]
-        st.write("開催時期:", details.get('開催時期', '情報がありません'))
-        st.write("終了時期:", details.get('終了時期', '情報がありません'))
-        st.write("場所:", details.get('場所', '情報がありません'))
-        st.write("---")
-else:
-    st.write("指定されたクラスの<h3>タグやイベント詳細情報が見つかりませんでした。")
+    events = []
+    if h3_with_images and event_details:
+        for i in range(min(len(h3_with_images), len(event_details))):
+            events.append({
+                "title": h3_with_images[i]['title'],
+                "img_src": h3_with_images[i]['img_src'],
+                "details": event_details[i]
+            })
+    
+    return jsonify(events)
+
+if __name__ == '__main__':
+    app.run(debug=True)
