@@ -1,109 +1,87 @@
-import pandas as pd
-import streamlit as st
 import requests
-import json
-import shutil
-import os
-from datetime import datetime
+from bs4 import BeautifulSoup
+import streamlit as st
+import urllib3
 
+# 警告を無視する設定
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-st.set_page_config(page_title="江別市ほいくえんアプリ")
-st.write("https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html からWEBスクレイピング")
+st.set_page_config(page_title="イベント情報")
+st.write("https://otaru.gr.jp/summer からWEBスクレイピング")
 
+url = 'https://otaru.gr.jp/summer'
 
+# h3タグと画像を取得する関数
+def get_h3_with_images(class_name_h3, class_name_img):
+    response = requests.get(url, verify=False)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-url = 'https://www.city.ebetsu.hokkaido.jp/site/kosodate/72891.html'
+    h3_tags = soup.find_all('h3', class_=class_name_h3)
+    
+    result = []
+    for h3 in h3_tags:
+        img_tag = h3.find_next('img', class_=class_name_img)
+        img_src = img_tag['src'] if img_tag else None
+        
+        result.append({
+            "title": h3.get_text(strip=True),
+            "img_src": img_src
+        })
+    
+    return result
 
-def load_env_vars():
-    if not os.path.exists('env.json'):
-        if os.path.exists('env.json.sample.json'):
-            shutil.copy('env.json.sample.json', 'env.json')
+# イベント詳細情報を取得する関数
+def get_event_details():
+    response = requests.get(url, verify=False)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    
+    details_list = []
+    
+    events = soup.find_all('div', class_='event_detail')  # 各イベントの詳細が格納された要素を取得
+    
+    for event in events:
+        details = {}
+        
+        # 開催時期を取得
+        start_time = event.find('div', class_='col left', string='開催時期')
+        if start_time:
+            details['開催時期'] = start_time.find_next_sibling('div').get_text(strip=True)
+        
+        # 終了時期を取得
+        end_time = event.find('div', class_='col left', string='終了時期')
+        if end_time:
+            details['終了時期'] = end_time.find_next_sibling('div').get_text(strip=True)
+        
+        # 場所を取得
+        location = event.find('div', class_='col left', string='場所')
+        if location:
+            details['場所'] = location.find_next_sibling('div').get_text(strip=True)
+        
+        details_list.append(details)
+    
+    return details_list
+
+# h3タグと画像、イベント詳細情報を取得
+class_name_h3 = 'head_item event_title'
+class_name_img = 'attachment-3x2 size-3x2 wp-post-image'
+
+h3_with_images = get_h3_with_images(class_name_h3, class_name_img)
+event_details = get_event_details()
+
+# 結果をStreamlitで表示
+if h3_with_images and event_details:
+    for i in range(min(len(h3_with_images), len(event_details))):
+        st.write("タイトル:", h3_with_images[i]['title'])
+        if h3_with_images[i]['img_src']:
+            st.image(h3_with_images[i]['img_src'])  # 画像を表示
         else:
-            st.error('env.json ファイルが見つかりません')
-            return ''
-    
-    try:
-        with open('env.json', 'r') as f:
-            env = json.load(f)
-            return env.get('LINE_NOTIFY_TOKEN', '')
-    except json.JSONDecodeError:
-        st.error('env.json の形式が不正です')
-        return ''
-
-LINE_NOTIFY_TOKEN = load_env_vars()
-
-def send_line_notify(message):
-    headers = {
-        'Authorization': f'Bearer {LINE_NOTIFY_TOKEN}',
-        'Content-Type': 'application/x-www-form-urlencoded',
-    }
-    payload = {'message': message}
-    response = requests.post('https://notify-api.line.me/api/notify', headers=headers, data=payload)
-    return response
-
-def get_nursary_info(match_string):
-    df_list = pd.read_html(url, match=match_string)
-    if df_list:
-        df = df_list[0]
-        nursary_info_list = []
-        for index, row in df.iterrows():
-            availability = {}
-            for column in df.columns[1:]:
-                availability[column] = row[column]
-
-            nursary_info = {
-                "施設名": row[df.columns[0]],
-                **availability
-            }
-            nursary_info_list.append(nursary_info)
-        return nursary_info_list
-    else:
-        return []
-
-childcare = get_nursary_info('【公立】やよい')
-community_childcare = get_nursary_info('あすかの森')
-certified_childcare = get_nursary_info('ぞうさんハウス')
-
-age_options = ['０歳', '１歳', '２歳', '３歳', '４歳', '５歳']
-availability_options = ['〇', '△', '☓']
-
-
-current_month = str(int(datetime.now().strftime('%m'))) 
-st.title(f'江別市保育園{current_month}月の入所状況')
-
-st.write("〇：空きあり　△：若干空きあり　☓：空きなし")
-
-if 'selected_age' not in st.session_state:
-    st.session_state.selected_age = age_options[0]
-if 'selected_availability' not in st.session_state:
-    st.session_state.selected_availability = availability_options[0]
-
-selected_age = st.selectbox('年齢を選択:', age_options, index=age_options.index(st.session_state.selected_age))
-selected_availability = st.selectbox('対応状況を選択:', availability_options, index=availability_options.index(st.session_state.selected_availability))
-
-st.session_state.selected_age = selected_age
-st.session_state.selected_availability = selected_availability
-
-col1, col2 = st.columns([2, 1])
-
-def display_filtered_table(data, age, availability):
-    st.write(f"条件 - 年齢: {age}, 対応状況: {availability}")
-    filtered_data = [entry for entry in data if entry.get(age) == availability]
-    
-    if filtered_data:
-        df = pd.DataFrame(filtered_data)
-        st.dataframe(df)
-        return df
-    else:
-        st.write("条件に一致するデータがありません")
-        return None
-
-st.header('保育所')
-df_childcare = display_filtered_table(childcare, selected_age, selected_availability)
-
-st.header('認定こども園')
-df_community_childcare = display_filtered_table(community_childcare, selected_age, selected_availability)
-
-st.header('地域型保育')
-df_certified_childcare = display_filtered_table(certified_childcare, selected_age, selected_availability)
-
+            st.write("画像が見つかりませんでした。")
+        
+        # イベントの詳細情報を表示
+        details = event_details[i]
+        st.write("開催時期:", details.get('開催時期', '情報がありません'))
+        st.write("終了時期:", details.get('終了時期', '情報がありません'))
+        st.write("場所:", details.get('場所', '情報がありません'))
+        st.write("---")
+else:
+    st.write("指定されたクラスの<h3>タグやイベント詳細情報が見つかりませんでした。")
