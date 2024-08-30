@@ -1,12 +1,26 @@
-import json
 import requests
 from bs4 import BeautifulSoup
 import urllib3
+from datetime import datetime
 
 # 警告を無視する設定
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-url = 'https://otaru.gr.jp/summer'
+# 現在の月を取得
+current_month = datetime.now().month
+
+# 月に基づいて季節を決定
+if 3 <= current_month <= 5:
+    season = 'spring'
+elif 6 <= current_month <= 8:
+    season = 'summer'
+elif 9 <= current_month <= 11:
+    season = 'fall'
+else:
+    season = 'winter'
+
+# 季節に基づいてURLを設定
+url = f'https://otaru.gr.jp/{season}'
 
 # h3タグと画像を取得する関数
 def get_h3_with_images(class_name_h3, class_name_img):
@@ -26,6 +40,7 @@ def get_h3_with_images(class_name_h3, class_name_img):
         })
     
     return result
+
 
 # イベント詳細情報を取得する関数
 def get_event_details():
