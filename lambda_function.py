@@ -11,6 +11,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 s3 = boto3.resource('s3')
 
 def get_h3_with_images(class_name_h3, class_name_img, url):
+    print(f"Fetching h3 tags with images from URL: {url}")
     response = requests.get(url, verify=False)
     soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -26,10 +27,12 @@ def get_h3_with_images(class_name_h3, class_name_img, url):
             "img_src": img_src
         })
     
+    print(f"Found {len(result)} h3 tags with images.")
     return result
 
 
 def get_event_details(url):
+    print(f"Fetching event details from URL: {url}")
     response = requests.get(url, verify=False)
     soup = BeautifulSoup(response.content, 'html.parser')
     
@@ -57,10 +60,13 @@ def get_event_details(url):
         
         details_list.append(details)
     
+    print(f"Found details for {len(details_list)} events.")
     return details_list
 
 
 def lambda_handler(event, context):
+    print("Lambda function has started execution.")
+    
     # 現在の月を取得してURLを決定
     current_month = datetime.now().month
     if 3 <= current_month <= 5:
@@ -73,7 +79,8 @@ def lambda_handler(event, context):
         season = 'winter'
 
     url = f'https://otaru.gr.jp/{season}'
-    
+    print(f"Using URL for season: {season}")
+
     class_name_h3 = 'head_item event_title'
     class_name_img = 'attachment-3x2 size-3x2 wp-post-image'
 
@@ -88,6 +95,8 @@ def lambda_handler(event, context):
                 "img_src": h3_with_images[i]['img_src'],
                 "details": event_details[i]
             })
+    
+    print(f"Preparing to upload {len(events)} events to S3.")
 
     # JSONデータをS3にアップロード
     file_contents = json.dumps(events, ensure_ascii=False)
@@ -96,8 +105,9 @@ def lambda_handler(event, context):
     s3_object = s3.Object(bucket, key)
     response = s3_object.put(Body=file_contents)
     
+    print(f"File uploaded to S3 with key: {key}")
+
     return {
         'statusCode': 200,
         'body': json.dumps({"message": "File uploaded successfully", "key": key}, ensure_ascii=False)
     }
-
